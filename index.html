@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-6">
+
+    <!-- Welcome Page -->
+    <div id="welcomePage" class="flex flex-col items-center justify-center text-center">
+        <h1 class="text-3xl font-bold text-blue-400 animate-pulse">📖 Welcome to Bible Explorer</h1>
+        <p class="text-lg text-gray-300 mt-2">Developed by <span class="text-blue-500 font-semibold">JoshDev</span></p>
+        <button id="enterBibleBtn" class="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+            ➡️ Enter Bible App
+        </button>
+    </div>
+
+    <!-- Bible App Section (Hidden by Default) -->
+    <div id="bibleAppPage" class="hidden w-full max-w-lg mx-auto">
+        <h2 class="text-2xl font-bold text-blue-400 text-center">📜 Bible Explorer</h2>
+
+        <!-- Verse of the Day Section -->
+        <div class="mt-4 p-4 bg-gray-800 rounded-lg text-center">
+            <h3 class="text-lg font-semibold text-yellow-400">🌟 Verse of the Day</h3>
+            <p id="verseOfTheDay" class="text-gray-300 mt-2 italic">Loading...</p>
+        </div>
+
+        <!-- Book, Chapter & Verse Selection -->
+        <div class="grid grid-cols-3 gap-2 my-4">
+            <select id="bookSelect" class="bg-gray-700 text-white p-2 rounded"></select>
+            <select id="chapterSelect" class="bg-gray-700 text-white p-2 rounded"></select>
+            <select id="verseSelect" class="bg-gray-700 text-white p-2 rounded"></select>
+        </div>
+        <button id="fetchVerseBtn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            📖 Load Verse
+        </button>
+        <p id="bibleVerseResult" class="mt-4 text-gray-300 text-lg"></p>
+
+        <!-- Next & Prev Verse Navigation -->
+        <div class="mt-4 flex justify-between">
+            <button id="prevVerse" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">⬅️ Previous</button>
+            <button id="nextVerse" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Next ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // Show Bible App after clicking the button
+        document.getElementById("enterBibleBtn").addEventListener("click", () => {
+            document.getElementById("welcomePage").classList.add("hidden");
+            document.getElementById("bibleAppPage").classList.remove("hidden");
+        });
+
+        // Fetch a random verse for "Verse of the Day"
+        async function fetchVerseOfTheDay() {
+            try {
+                const response = await fetch("https://beta.ourmanna.com/api/v1/get/?format=json");
+                if (!response.ok) throw new Error("Verse not found");
+                const data = await response.json();
+                document.getElementById("verseOfTheDay").innerHTML = `<strong>${data.verse.details.reference}:</strong> ${data.verse.details.text}`;
+            } catch (error) {
+                document.getElementById("verseOfTheDay").innerHTML = "Error loading verse.";
+            }
+        }
+        fetchVerseOfTheDay();
+
+        // Bible Books List
+        const books = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
+            "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs",
+            "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel",
+            "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
+            "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians",
+            "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy",
+            "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"];
+        
+        const bookSelect = document.getElementById("bookSelect");
+        books.forEach(book => {
+            const option = document.createElement("option");
+            option.value = book;
+            option.textContent = book;
+            bookSelect.appendChild(option);
+        });
+
+        // Fetch Chapters and Verses
+        function fetchChapters() {
+            document.getElementById("chapterSelect").innerHTML = "";
+            document.getElementById("verseSelect").innerHTML = "";
+            for (let i = 1; i <= 50; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                document.getElementById("chapterSelect").appendChild(option);
+            }
+            fetchVerses();
+        }
+        bookSelect.addEventListener("change", fetchChapters);
+
+        function fetchVerses() {
+            document.getElementById("verseSelect").innerHTML = "";
+            for (let i = 1; i <= 30; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                document.getElementById("verseSelect").appendChild(option);
+            }
+        }
+        document.getElementById("chapterSelect").addEventListener("change", fetchVerses);
+
+        let currentVerse = 1;
+
+        async function fetchVerse() {
+            const book = bookSelect.value;
+            const chapter = document.getElementById("chapterSelect").value;
+            const verse = document.getElementById("verseSelect").value;
+            currentVerse = parseInt(verse);
+
+            try {
+                const response = await fetch(`https://bible-api.com/${book} ${chapter}:${verse}`);
+                if (!response.ok) throw new Error("Verse not found");
+                const data = await response.json();
+                document.getElementById("bibleVerseResult").innerHTML = `<strong>${data.reference}:</strong> ${data.text}`;
+            } catch (error) {
+                document.getElementById("bibleVerseResult").innerHTML = "Error loading verse.";
+            }
+        }
+        document.getElementById("fetchVerseBtn").addEventListener("click", fetchVerse);
+
+        // Next & Prev Verse Navigation
+        document.getElementById("prevVerse").addEventListener("click", () => {
+            if (currentVerse > 1) {
+                currentVerse--;
+                document.getElementById("verseSelect").value = currentVerse;
+                fetchVerse();
+            }
+        });
+
+        document.getElementById("nextVerse").addEventListener("click", () => {
+            currentVerse++;
+            document.getElementById("verseSelect").value = currentVerse;
+            fetchVerse();
+        });
+
+    </script>
+</body>
+  </html>
